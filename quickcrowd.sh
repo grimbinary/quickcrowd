@@ -3,21 +3,45 @@
 # Determine operating system
 OS=$(uname -s)
 
+# Determine the exact distribution if Linux
+if [ "$OS" == "Linux" ]; then
+     DISTRO=$(source /etc/os-release; echo $NAME)
+fi
 # Install Docker based on operating system
 if [ "$OS" == "Linux" ]; then
-  echo -e "\e[1;33mInstalling Docker on Linux\e[0m"
-  sudo apt-get update
-  sudo apt-get install -y ca-certificates curl gnupg
-  sudo install -m 0755 -d /etc/apt/keyrings
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-  sudo chmod a+r /etc/apt/keyrings/docker.gpg
-  echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-  sudo apt-get update
-  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  sudo docker run hello-world
+    if [[ "$DISTRO" == *"Debian"* ]]; then
+        echo -e "\e[1;33mInstalling Docker on Debian\e[0m"
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates curl gnupg lsb-release
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        sudo chmod a+r /etc/apt/keyrings/docker.gpg
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+          $(lsb_release -cs) stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    elif [[ "$DISTRO" == *"Ubuntu"* ]]; then
+        echo -e "\e[1;33mInstalling Docker on Ubuntu\e[0m"
+        sudo apt-get update
+        sudo apt-get install -y ca-certificates curl gnupg
+        sudo install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        sudo chmod a+r /etc/apt/keyrings/docker.gpg
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    elif [[ "$DISTRO" == *"CentOS"* ]]; then
+        echo -e "\e[1;33mInstalling Docker on CentOS\e[0m"
+        sudo yum install -y yum-utils
+        sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+        sudo yum install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        sudo systemctl start docker
+fi
 elif [ "$OS" == "Darwin" ]; then
   echo -e "\e[1;33mInstalling Docker on macOS\e[0m"
   # Prompt user to specify if their macOS system is Apple Silicon or Intel
@@ -35,7 +59,7 @@ elif [ "$OS" == "Darwin" ]; then
 else
   echo "Unsupported operating system"
 fi
-
+ sudo docker run hello-world
 # Check for Linux distributions
 if [ "$OS" == "Linux" ]; then
     # Determine the exact distribution
@@ -65,6 +89,7 @@ else
 fi
 
 # Prompt user to enter their enroll token and enroll the agent on the cscli console
+echo -e "\e[1;33mPlease complete the following: \e[0m"
 read -p "Enter your enroll token: " ENROLL_TOKEN
 sudo cscli console enroll $ENROLL_TOKEN
 echo -e "\e[1;33mPlease go back to CrowdSec to accept your enrollment. \e[0m"
@@ -80,6 +105,6 @@ while [[ "$CONFIRM" != "y" ]]; do
 done
 
 # Completion message
-echo -e "\e[1;33mScript completed. Executing 'cscli' command to verify successful installation... \e[0m"
+echo -e "\e[1;33mScript completed. Executing 'cscli' command in your terminal to verify successful installation... \e[0m"
 sleep 5
 cscli
