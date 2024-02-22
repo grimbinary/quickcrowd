@@ -1,13 +1,9 @@
 #!/bin/bash
-
-# Determine operating system
 OS=$(uname -s)
 
-# Determine the exact distribution if Linux
 if [ "$OS" == "Linux" ]; then
      DISTRO=$(source /etc/os-release; echo $NAME)
 fi
-# Install Docker based on operating system
 if [ "$OS" == "Linux" ]; then
     if [[ "$DISTRO" == *"Debian"* ]]; then
         echo -e "\e[1;33mInstalling Docker on Debian\e[0m"
@@ -44,7 +40,6 @@ if [ "$OS" == "Linux" ]; then
 fi
 elif [ "$OS" == "Darwin" ]; then
   echo -e "\e[1;33mInstalling Docker on macOS\e[0m"
-  # Prompt user to specify if their macOS system is Apple Silicon or Intel
   read -p "Is your macOS system Apple Silicon (y/n)? " APPLE_SILICON
   if [ "$APPLE_SILICON" == "y" ]; then
     softwareupdate --install-rosetta
@@ -60,12 +55,9 @@ else
   echo "Unsupported operating system"
 fi
  sudo docker run hello-world
-# Check for Linux distributions
 if [ "$OS" == "Linux" ]; then
-    # Determine the exact distribution
     DISTRO=$(awk -F= '/^NAME/{print $2}' /etc/os-release)
 
-    # Install CrowdSec agent based on distribution
     if [[ "$DISTRO" == *"Ubuntu"* ]] || [[ "$DISTRO" == *"Debian"* ]]; then
         echo -e "\e[1;33mInstalling CrowdSec agent on Debian/Ubuntu\e[0m"
         curl -s https://packagecloud.io/install/repositories/crowdsec/crowdsec/script.deb.sh | sudo bash
@@ -88,13 +80,11 @@ else
     echo "Unsupported operating system"
 fi
 
-# Prompt user to enter their enroll token and enroll the agent on the cscli console
 echo -e "\e[1;33mPlease complete the following: \e[0m"
 read -p "Enter your enroll token: " ENROLL_TOKEN
 sudo cscli console enroll $ENROLL_TOKEN
 echo -e "\e[1;33mPlease go back to CrowdSec to accept your enrollment. \e[0m"
 
-# Prompt user to confirm if they have added their enroll token to the CrowdSec site
 CONFIRM='n'
 while [[ "$CONFIRM" != "y" ]]; do
   read -p "Have you added your enroll token to the CrowdSec site (y/n)? " CONFIRM
@@ -104,7 +94,6 @@ while [[ "$CONFIRM" != "y" ]]; do
   fi
 done
 
-# Completion message
 echo -e "\e[1;33mScript completed. Executing 'cscli' command in your terminal to verify successful installation... \e[0m"
 sleep 5
 cscli
